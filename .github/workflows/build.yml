@@ -1,0 +1,45 @@
+name: Build Android APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+    - name: Setup Android Project
+      run: |
+        mkdir -p app/src/main/assets
+        mkdir -p app/src/main/java/com/vlaky/app
+        echo 'plugins { id "com.android.application" version "8.1.1" }
+        android {
+            namespace "com.vlaky.app"
+            compileSdk 34
+            defaultConfig {
+                applicationId "com.vlaky.app"
+                minSdk 21
+                targetSdk 34
+                versionCode 1
+                versionName "1.0"
+            }
+        }' > build.gradle
+        echo 'include ":app"' > settings.gradle
+        echo 'plugins { id "com.android.application" }
+        dependencies { implementation "androidx.appcompat:appcompat:1.6.1" }' > app/build.gradle
+    - name: Create Android Manifest
+      run: |
+        echo '<?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:theme="@style/Theme.AppCompat.Light.NoActionBar" android:usesCleartextTraffic="true">
+                <activity android:name="com.vlaky.app.MainActivity" android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+            </application>
+        </manifest>' > app/src/main/AndroidManifest.xml
